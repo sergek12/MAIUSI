@@ -4,7 +4,7 @@
 #include<iostream>
 #include<string>
 using namespace std;
-/*
+
 class Solution {
 public:
     string getLucky(string s, int k){
@@ -17,7 +17,7 @@ public:
         return number;
     }
 };
-*/
+
 int main() {
  
 }
