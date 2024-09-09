@@ -1,0 +1,191 @@
+using MySql.Data.MySqlClient;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Annotations;
+using System.Windows.Forms;
+using System.Diagnostics;
+using System.Reflection;
+
+namespace OzoznaieLauncher_1._1
+{
+    public partial class MainForms : Form
+    {
+        private void UpdateButtonPreOrder() { 
+            
+            ConnectDB ButtonPreOrderCHange = new ConnectDB();
+            DataTable PreOrderStatusTab = new DataTable();
+            MySqlDataAdapter PreOrderVerif = new MySqlDataAdapter();
+            MySqlCommand PreOrderCommand = new MySqlCommand("SELECT * FROM test.`cd-key_keeper` WHERE Login = @Loginsql AND Status = 'Activate';", ButtonPreOrderCHange.GetServerConnection());
+            PreOrderVerif.SelectCommand = PreOrderCommand;
+            PreOrderVerif.Fill(PreOrderStatusTab);
+
+            if (PreOrderStatusTab.Rows.Count > 0 )
+            {
+                
+            }
+        }
+        private string SearchGames(string LoginForCheck)
+        {
+            try
+            {
+                ConnectDB GameList = new ConnectDB();
+                MySqlDataAdapter ListSender = new MySqlDataAdapter();
+                DataTable GameTable = new DataTable();
+                MySqlCommand GameCheck = new MySqlCommand("SELECT * FROM test.`cd-key_keeper` WHERE Login = @Log AND GameName = 'Osoznanie' ", GameList.GetServerConnection());
+                GameCheck.Parameters.Add("@Log", MySqlDbType.VarChar).Value = LoginForCheck;
+                ListSender.SelectCommand = GameCheck;
+                ListSender.Fill(GameTable);
+                return (GameTable.Rows.Count > 0) ? "Osoznanie" : "None";
+            } catch (MySql.Data.MySqlClient.MySqlException e)
+            {
+                _ = e;
+                return "Osoznanie";
+            }
+
+        }
+        string Login;
+
+        public void TurnOffMenu() {
+            PlayButton.Visible = false;
+            ReloadButton.Visible = false;
+            PreOrderButton.Visible = false;
+            OsoznanieMenu.Visible = false;
+         
+            Activate_key_button.Visible = false;
+        }
+        public void TurnOnMenu()
+        {
+            PlayButton.Visible = true;
+            ReloadButton.Visible = true;
+            PreOrderButton.Visible = true;
+            OsoznanieMenu.Visible = true;
+            if (SearchGames(Login) == "Osoznanie")
+            {
+                Activate_key_button.Visible = false;
+      
+            }
+            else
+            {
+                
+                Activate_key_button.Visible= true;
+            }
+            
+        }
+        public MainForms(string GlLogin)
+        {
+            InitializeComponent();
+            this.Login = GlLogin;
+        }
+
+        
+        private void MainForms_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void panel1_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void SoznanieButton_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void OsoznanieChose_Click(object sender, EventArgs e)
+        {
+            if ((PreOrderButton.Visible == false) && (PlayButton.Visible == false) && (ReloadButton.Visible == false) && (OsoznanieMenu.Visible == false) && (Activate_key_button.Visible == false))
+            {
+                TurnOnMenu();
+            }
+            else
+            {
+                TurnOffMenu();
+            }
+        }
+
+        private void pictureBox1_Click_1(object sender, EventArgs e)
+        {
+            
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            
+        }
+
+        private void PreOrderButton_Click(object sender, EventArgs e)
+        {
+            PreOrderWindow66 PayPage = new PreOrderWindow66();
+            PayPage.Show();
+        }
+
+        private void PlayButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                String path = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "\\negr1\\Godot Ozoznanie Alpha.exe";
+                Process.Start(path);
+            } catch (Exception exp) {
+                _ = exp;
+                Form1 Run_path = new Form1();
+                Run_path.Show();
+            }
+           
+
+        }
+
+        private void ExitButton_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
+
+        private void WinButton_Click(object sender, EventArgs e)
+        {
+            
+        }
+
+        private void ExitButton_Click_1(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
+
+        private void Activate_key_button_Click(object sender, EventArgs e)
+        {
+            Activate_key_form KeyApplyDialog = new Activate_key_form(Login);
+            KeyApplyDialog.Show();
+        }
+
+        private void KeyStatus_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+    }
+}
