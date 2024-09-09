@@ -1,0 +1,130 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using MySql.Data.MySqlClient;
+using OsoznanieLibraryBeta;
+
+namespace OzoznaieLauncher_1._1
+{
+    
+    public partial class AuthForms : Form
+    {
+        public AuthForms()
+        {
+            InitializeComponent();
+            NewsList();
+            
+        }
+
+       
+        private void LoginUser()
+        {
+            string LoginUser = LoginUserField.Text;
+            string PassUser = PasswordUserField.Text;
+            
+            ConnectDB LogDB = new ConnectDB(); // Создаем объект БД
+            MySqlDataAdapter SenderToDB = new MySqlDataAdapter();
+            LogDB.ConnectToDataBase(); // Подлючаемся к серверу указанному в классе ConnectDB.cs
+            DataTable LogAndPass = new DataTable(); // Создаем объект таблицы
+            MySqlCommand CheckLogPass = new MySqlCommand("SELECT * FROM test.tabletest WHERE login = @UserL and password = @UserPass;", LogDB.GetServerConnection()); //Ищем логин и пароль в БД
+            CheckLogPass.Parameters.Add("@UserL", MySqlDbType.VarChar).Value = LoginUser;
+            CheckLogPass.Parameters.Add("@UserPass", MySqlDbType.VarChar).Value = PassUser;
+            SenderToDB.SelectCommand = CheckLogPass;
+            SenderToDB.Fill(LogAndPass);
+
+            if (LogAndPass.Rows.Count > 0)
+            {
+                
+                MainForms Laucnher = new MainForms(LoginUser); 
+                Laucnher.Show();
+                this.Hide();
+               
+
+            }
+            else
+            {
+                MessageBox.Show("Authentication error 0x1");
+    
+            }
+                
+
+        }
+
+        
+        private void NewsList()
+        {
+
+            string NewsVersion = "Alpha 0.2";     // Номер версии обновления
+
+            try {
+                Version_Control_Label.Text = NewsVersion;
+                Version_Control_Label_News_List.Text = NewsVersion;
+                ConnectDB DBUpdate = new ConnectDB();   //Создаем ассоциацую объекта с базой данных, внутри подключаемся к БД
+                DBUpdate.ConnectToDataBase();
+                DataTable TextTable = new DataTable();
+                MySqlCommand CopyFromDB = new MySqlCommand("SELECT * FROM test.updatelist WHERE UpdateVersion = @NumUp;", DBUpdate.GetServerConnection());   //Прописываем команду взаимодействия с БД
+                CopyFromDB.Parameters.Add("@NumUp", MySqlDbType.VarChar).Value = NewsVersion;   //Заменяем заглушку переменной 
+                MySqlDataAdapter SenderUpdate = new MySqlDataAdapter();     //Создаем адаптер взаимодействия с ДБ
+                SenderUpdate.SelectCommand = CopyFromDB;    //Отправляем команду в адаптер для выполнения в ДБ
+                SenderUpdate.Fill(TextTable);       //Вписываем информацию полученную из адаптера в объект таблицу
+                MySqlDataReader Buffer = CopyFromDB.ExecuteReader();
+                Buffer.Read();
+                string TextUpdate = Buffer.GetString("UpdateText");
+                News_Label.Text = TextUpdate;
+                DBUpdate.EndConnectWithDataBase();
+            } catch (MySql.Data.MySqlClient.MySqlException e) {
+                _ = e;
+            }
+
+        }
+        private void ExitButton_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
+
+        private void LoginUserField_TextChanged(object sender, EventArgs e)
+        {
+        }
+
+        private void PasswordUserField_TextChanged(object sender, EventArgs e)
+        {
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            LoginUser();
+        }
+
+        private void Reg_button_Click(object sender, EventArgs e)
+        {
+            this.Hide();
+            RegMenu registerMenu = new RegMenu();
+            registerMenu.Show();
+        }
+
+        private void More_Update_Label_Click(object sender, EventArgs e)
+        {
+            this.Hide();
+            UpdateWindow updateWindow = new UpdateWindow();
+            updateWindow.Show();
+        }
+
+        private void ExitButton_Click_1(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
+
+        private void label5_Click(object sender, EventArgs e)
+        {
+            MainForms Laucnher = new MainForms("Beta_auth");
+            Laucnher.Show();
+            this.Hide();
+        }
+    }
+}
