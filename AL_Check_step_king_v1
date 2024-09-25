@@ -1,0 +1,24 @@
+#include <iostream>
+#include <cmath>
+using namespace std;
+
+int main() {
+    int X_a , X_b, Y_a, Y_b;        // объявление переменных точек
+    float Range;                    // объявление переменной расстояния
+    cin >> X_a >> Y_a >> X_b >> Y_b;    //Ввод пользователя
+    if ((X_a == X_b) && (Y_a == Y_b)) { // проверка на однаковые значения
+        cout << "No" << endl;       // если одинаково - НЕТ
+    }
+    else {
+        Range = sqrt(pow((X_b - X_a),2) + pow(Y_b - Y_a,2)); // Вычисление расстояния между двумя точками
+        cout << Range << endl;          // DEBUG COUT
+        if (Range >= 2) {               // Если расстояния больше округа клеток, то NO
+            cout << "No" << endl;       // Вывод NO
+        }
+        if (Range < 2) {                //Если точка находится в радиусе меньше двух то сможет
+            cout << "Yes" << endl;      // Вывод YES
+        }
+    }
+}
+
+
