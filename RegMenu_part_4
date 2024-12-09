@@ -1,0 +1,167 @@
+using MySql.Data.MySqlClient;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace OzoznaieLauncher_1._1
+{
+    public partial class RegMenu : Form
+    {
+        public RegMenu()
+        {
+            InitializeComponent();
+        }
+        private bool RegistrationFormCheck()
+        {
+            string ErrorBox = "Enter ";
+            int ErrorCode = 0;
+            if (UserLoginRegField.Text == "")
+            {
+                ErrorBox += "login, ";
+                ErrorCode += 1;
+            }
+            if (UserPasswordRegField.Text == "")
+            {
+                ErrorBox += "password, ";
+                ErrorCode += 1;
+            }
+            if (UserEmailRegField.Text == "")
+            {
+                ErrorBox += "email, ";
+                ErrorCode += 1;
+            }
+            if (UserFnameRegField.Text == "")
+            {
+                ErrorBox += "First name, ";
+                ErrorCode += 1;
+            }
+            if (UserLnameRegField.Text == "")
+            {
+                ErrorBox += "Last name, ";
+                ErrorCode += 1;
+            }
+            ErrorBox += "please";
+            if (ErrorCode > 0)
+            {
+                MessageBox.Show(ErrorBox);
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+
+        private bool SingleUserInformationCheck()
+        {
+            string LoginUser = UserLoginRegField.Text;
+            string EmailUser = UserEmailRegField.Text;
+
+            ConnectDB LogDB = new ConnectDB(); // Создаем объект БД
+            MySqlDataAdapter SenderToDB = new MySqlDataAdapter();
+            LogDB.ConnectToDataBase(); // Подлючаемся к серверу указанному в классе ConnectDB.cs
+            DataTable LogandEmail = new DataTable(); // Создаем объект таблицы
+            MySqlCommand CheckLogEmail = new MySqlCommand("SELECT * FROM test.tabletest WHERE login = @UserL and email = @UserEmail;", LogDB.GetServerConnection()); //Ищем логин и пароль в БД
+            CheckLogEmail.Parameters.Add("@UserL", MySqlDbType.VarChar).Value = LoginUser;
+            CheckLogEmail.Parameters.Add("@UserEmail", MySqlDbType.VarChar).Value=EmailUser;
+            SenderToDB.SelectCommand = CheckLogEmail;
+            SenderToDB.Fill(LogandEmail);
+
+            if (LogandEmail.Rows.Count > 0)
+            {
+                return false;
+            }
+            else
+                return true;
+        }
+        private void pictureBox5_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void UserEmailRegField_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void UserLnameRegField_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void UserFnameRegField_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void pictureBox3_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void UserLoginRegField_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void UserPasswordRegField_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void ApplyRegButton_Click(object sender, EventArgs e)
+        {
+            if (RegistrationFormCheck() == true)
+                if (SingleUserInformationCheck() == true)
+                {
+                    ConnectDB RegForms = new ConnectDB(); //Создание объекта БД для доступа к функциями ConnectDB
+                    MySqlCommand RegAdder = new MySqlCommand("INSERT INTO `test`.`tabletest` (`login`, `password`, `email`, `Fname`, `Lname`) VALUES (@tempLog,@tempPass,@tempEmail,@tempFname,@tempLname);", RegForms.GetServerConnection());
+                    RegAdder.Parameters.Add("@tempLog", MySqlDbType.VarChar).Value = UserLoginRegField.Text;
+                    RegAdder.Parameters.Add("@tempPass", MySqlDbType.VarChar).Value = UserPasswordRegField.Text;
+                    RegAdder.Parameters.Add("@tempEmail", MySqlDbType.VarChar).Value = UserEmailRegField.Text;
+                    RegAdder.Parameters.Add("@tempFname", MySqlDbType.VarChar).Value = UserFnameRegField.Text;
+                    RegAdder.Parameters.Add("@tempLname", MySqlDbType.VarChar).Value = UserLoginRegField.Text;
+                    RegForms.ConnectToDataBase();
+                    if (RegAdder.ExecuteNonQuery() == 1)
+                    {
+                        MessageBox.Show("Registration complete!");
+                        this.Hide();
+                        AuthForms LogForms = new AuthForms();
+                        LogForms.Show();
+                    }
+                    RegForms.EndConnectWithDataBase();
+                }
+                else
+                    MessageBox.Show("User is already registred! Change login,password and email");
+            {
+            }
+
+
+        }
+
+        private void ExitButton_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
+
+        private void TrayButton_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void WinButton_Click(object sender, EventArgs e)
+        {
+
+        }
+    }
+}
