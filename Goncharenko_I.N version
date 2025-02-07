@@ -1,0 +1,168 @@
+#include <iostream>
+#include <chrono>
+#include <fstream>
+#include <thread>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <windows.h>
+#include <limits>
+#pragma comment(lib, "Ws2_32.lib")
+using namespace std;
+using namespace chrono;
+
+bool check_pas(const char* password);
+
+bool measureDataTransferTCP(const char* server_ip, int port, const char* user, const char* password,
+                            size_t packet_size, int packet_frequency, const char* filename, const string& message) {
+    WSADATA wsa;
+
+    // Инициализация Winsock
+    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
+        cerr << "Ошибка инициализации Winsock: " << WSAGetLastError() << endl;
+        return false;
+    }
+
+    // Создание сокета
+    SOCKET sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == INVALID_SOCKET) {
+        cerr << "Не удалось создать сокет. Ошибка: " << WSAGetLastError() << endl;
+        WSACleanup();
+        return false;
+    }
+
+    // Настройка адреса сервера
+    struct sockaddr_in server_addr;
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(port);
+    if (inet_pton(AF_INET, server_ip, &server_addr.sin_addr) <= 0) {
+        cerr << "Неверный IP-адрес сервера." << endl;
+        closesocket(sockfd);
+        WSACleanup();
+        return false;
+    }
+
+    // Подключение к серверу
+    if (connect(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+        cerr << "Не удалось подключиться к серверу. Ошибка: " << WSAGetLastError() << endl;
+        closesocket(sockfd);
+        WSACleanup();
+        return false;
+    }
+    // Подготовка данных для отправки
+    string data = message;
+    if (data.size() < packet_size) {
+        // Если сообщение меньше размера пакета, дополняем его пробелами
+        data.append(packet_size - data.size(), ' ');
+    } else if (data.size() > packet_size) {
+        // Если сообщение больше, обрезаем его
+        data = data.substr(0, packet_size);
+    }
+    auto start = high_resolution_clock::now();
+
+    // Отправка данных
+    for (int i = 0; i < packet_frequency; i++) {
+        if (send(sockfd, data.c_str(), static_cast<int>(data.size()), 0) == SOCKET_ERROR) {
+            cerr << "Не удалось отправить данные. Ошибка: " << WSAGetLastError() << endl;
+            closesocket(sockfd);
+            WSACleanup();
+            return false;
+        }
+        this_thread::sleep_for(chrono::milliseconds(100)); // Задержка между отправками
+    }
+
+    auto end = high_resolution_clock::now();
+    duration<double> duration = end - start;
+
+    // Вычисления
+    double total_data = packet_size * packet_frequency;
+    double speed = total_data / duration.count(); // Скорость передачи данных (байты в секунду)
+    double average_delay = duration.count() / packet_frequency;
+
+    ofstream result_file(filename, ios::out | ios::app);
+    if (!result_file.is_open()) {
+        cerr << "Не удалось открыть файл для записи!" << endl;
+        closesocket(sockfd);
+        WSACleanup();
+        return false;
+    }
+
+    result_file << "Сообщение: " << message << endl;
+    result_file << "Размер данных: " << packet_size << " байт" << endl;
+    result_file << "Общее время: " << duration.count() << " секунд." << endl;
+
+    // Проверка на наличие пароля
+    if (strlen(password) > 0) {
+        result_file << "Пароль: " << password << endl;
+    } else {
+        cout << "Неверный пароль" << endl;
+        result_file.close();
+        closesocket(sockfd);
+        WSACleanup();
+        return false;
+    }
+
+    result_file << "Размер пакета: " << packet_size << " байт, "
+                << "Частота пакетов: " << packet_frequency << " пакетов, "
+                << "Общее время: " << duration.count() << " секунд." << endl;
+    result_file << "Скорость передачи: " << speed / 1024 << " КБ/с" << endl;
+    result_file << "Средняя задержка: " << average_delay * 1000 << " мс" << endl;
+
+    result_file.close();
+    closesocket(sockfd);
+    WSACleanup();
+    return true;
+}
+
+bool check_pas(const char* password) {
+    if (strlen(password) == 0) {
+        return false;
+    }
+    return true;
+}
+
+
+
+int main() {
+    SetConsoleOutputCP(CP_UTF8);    //Установка кодировка
+    char server_ip[16]; // ip сервера с которым будем
+    int port;   // Желаемый порт
+    char user[50];  // логин на сервере
+    char password[50];  //пароль от сервера
+    size_t packet_size;
+    int packet_frequency; //Частота пакетов
+    string message;
+
+    cout << "Введите IP Вашего сервера: ";
+    cin >> server_ip;
+
+    cout << "Введите порт: ";
+    cin >> port;
+
+    cout << "Введите имя пользователя: ";
+    cin >> user;
+
+    cout << "Введите пароль(Если требуется): ";
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');  // Очистка буфера ввода
+    cin.getline(password, 50);
+
+    cout << "Что необходимо передать?: ";
+    getline(cin, message);
+
+    cout << "Введите размер пакета (в байтах): ";
+    cin >> packet_size;
+
+    cout << "Введите частоту пакетов (количество пакетов): ";
+    cin >> packet_frequency;
+
+    if (!check_pas(password)) {
+        cerr << "Ошибка: Пароль пустой! " << endl;
+        return 1;
+    }
+
+    if (measureDataTransferTCP(server_ip, port, user, password, packet_size, packet_frequency, "result_tcp.txt", message)) {
+        cout << "Тест передачи данных завершен успешно!" << endl;
+    } else {
+        cerr << "Ошибка в тесте передачи данных." << endl;
+    }
+    return 0;
+}
