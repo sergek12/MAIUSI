@@ -1,0 +1,124 @@
+//
+// Created by Sergei on 17.04.2025.
+//
+
+#include "Card_accept_terminal.h"
+#include <iostream>
+
+
+
+class Payment_account {
+    //Доступно только внутри
+private:
+    int credit_card_num = 0;
+    long IBAN = 904012000521;   //номер счета
+    std::string fio = "Anton Victorovich Glebov";    // фио
+    int debit_balance = 0; // дебет баланс
+    int credit_balance = 0; // кредит баланс
+    int DOB = 0;    // день рождения
+    int reserv_order = 0;
+
+    ;
+    // Блок функций в паблик
+
+    public:
+
+    bool check_iban_fio(int iban, std::string fio) { // Проверка соответствия iban и фио клиента
+        int testdata = 904012000521;    // тестовый вход
+        std::string test_fio = "Anton Victorovich Glebov";      // ФИО клиента
+
+        if (test_fio == fio & iban == testdata) {       // если фио совпадает с фио в банке и iban найден
+            return true;                            // Возвращаем сообщение удачном завершении
+        }
+
+        else {                                  // Если произошла ошибка или данные не найдены
+            std::cout << "Procces error, retry operation " << std::endl;    // оповещаем об ошибки и возвращаем сообщение о неудачи
+            return false;
+        }
+    };
+    bool check_iban_fio(int iban) {     // перезагрузка функции сравнения iban только по номеру
+        if (iban == this->IBAN) {       // если найден iban возвращаем правду
+            return true;
+        }
+        else {
+            return false;               // возвращаем информацию о неудачном поиске
+        }
+    }
+    int Pay_accept_with_card_offline(int card_num, int order_balance) { //Оплата оффлайнн
+        short Successful_flag_num;  // флаг становится 1 если найден номер
+        short Successful_flag_balance;  //флаг ставится 1 если баланс корректен
+
+        if (card_num == this->credit_card_num) {
+            Successful_flag_num = 1;        // номер карты найден
+        }
+        else if (Successful_flag_num != card_num) {
+            Successful_flag_num = 0;        // номер карты не найден
+        }
+        else if (order_balance > this->debit_balance) { // если не хватает средств на счете
+            Successful_flag_balance = 0;
+        }
+        else if (order_balance <= this->debit_balance) {
+            Successful_flag_balance = 1;            // если баланс позволяет совершить оплату
+        }
+        if (Successful_flag_balance + Successful_flag_num == 2) {   //суммируем и проверяем что проверки пройдены удачно
+            this->reserv_order = order_balance;
+            return 2;       // 2 флага отработали
+        }
+        else {
+            return 5;
+        }
+        }
+
+    bool Payment_from_dep(short CodeType) {     //обрабатываем информацию о покупке, проверка на то, что флаги отмечены
+        switch (CodeType) {
+            case 1: case 5: case 0: return false;       // упрощение свича
+            case 2: return true;
+
+        }
+
+    }
+    int Make_pay(bool permmision) {             // Совершение покупки и обновление баланса
+        if (permmision == true) {
+            this->debit_balance = this->debit_balance - this->reserv_order; // вычитаем с дебета сумму покупки
+            return 0;
+        }
+        else {
+            return 1;
+        }
+    }
+    void create_check() {           // Вывод чека в нонсоль
+
+        std::cout << "Credit_balance: " <<this->credit_balance << std::endl;    // баланс кредитной карты
+        std::cout << "Debet_balance: " << this->debit_balance<< std::endl;      // баланс дебетового счета
+        std::cout << "Holder name: " <<this->fio << std::endl;          // ФИО держателя
+    }
+    void Make_a_deposit(std::string HolderFIO, int HolderIBAN,int sum_deposit) {        // зачисление денег на счет
+        if (check_iban_fio(HolderIBAN, HolderFIO) == true){     // найден хозяин, его фио и iban даем добро
+            this->debit_balance = this->debit_balance + sum_deposit;        // занести средства на счет
+        }
+    }
+    void Issue_card(int IBAN) {                                     // выпуск платиковой карты и привязка
+       if (check_iban_fio(IBAN) == true) {              // связываем iban с картой
+           this->credit_card_num = 4950234155560001;
+           std::cout << this->credit_card_num<< std::endl;          // выводим номер карты который прикреплен
+       }
+    }
+    bool swift_system(int to_IBAN, int to_swift_code, std::string to_fio, int amount_to, std::string bank_name) {
+            // разработка метода
+    }
+
+};
+int main() {
+
+    using namespace std;
+    Payment_account test;       // объект класса
+    test.create_check();        // вывод чека
+
+    test.Make_a_deposit("Anton Victorovich Glebov", 904012000521, 500);     //зачисление
+    if (test.check_iban_fio(904012000521, "Anton Victorovich Glebov") == true) {        // сверяем данные и выводим чек с зачислением
+        test.create_check();
+    }
+    test.Issue_card(904012000521);      // выпуск карты по IBAN номеру
+    return 0;
+}
+
